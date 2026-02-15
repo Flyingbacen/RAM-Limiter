@@ -60,7 +60,7 @@ namespace RAMLimiter
                 if (!process.HasExited && process.Id != 0)
                 {
                     EmptyWorkingSet(process.Handle);
-                    Console.WriteLine($"Memory of process {process.ProcessName} ({process.Id}) has been reduced.");
+                    // Console.WriteLine($"Memory of process {process.ProcessName} ({process.Id}) has been reduced.");
                 }
             }
             catch (Exception ex)
@@ -75,12 +75,33 @@ namespace RAMLimiter
             try
             {
                 process.Refresh(); // Refresh process properties
-                Console.WriteLine($"Process: {process.ProcessName}, Memory: {process.WorkingSet64 / (1024 * 1024)} MB");
+                // Console.WriteLine($"Process: {process.ProcessName}, Memory: {process.WorkingSet64 / (1024 * 1024)} MB");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error retrieving memory usage: {ex.Message}");
             }
+        }
+
+        // sum WorkingSet64 for same ProcessName
+        static List<(string Name, long TotalBytes, int Count)> AggregateMemoryByName(IEnumerable<Process> processes)
+        {
+            var result = new List<(string, long, int)>();
+            var aggregates = processes
+                .Where(p => 
+                {
+                    try { p.Refresh(); return !p.HasExited; }
+                    catch { return false; }
+                })
+                .GroupBy(p => p.ProcessName)
+                .Select(g => new { Name = g.Key, Total = g.Sum(p => p.WorkingSet64), Count = g.Count() });
+
+            foreach (var a in aggregates)
+            {
+                result.Add((a.Name, a.Total, a.Count));
+            }
+
+            return result;
         }
 
         // Monitor specified processes and reduce their memory usage periodically
@@ -89,13 +110,23 @@ namespace RAMLimiter
             while (true)
             {
                 var processes = GetProcessesByNames(processNames);
+                var aggregates = AggregateMemoryByName(processes);
+                foreach (var (Name, TotalBytes, Count) in aggregates)
+                {
+                    Console.WriteLine($"Process: {Name}, Instances: {Count}, Total Memory: {TotalBytes / (1024 * 1024)} MB");
+                }
+
                 foreach (var process in processes)
                 {
-                    DisplayMemoryUsage(process);
+                    // DisplayMemoryUsage(process);
                     ReduceRamUsage(process);
                 }
-                Console.WriteLine("Waiting 3 seconds...");
-                await Task.Delay(3000); // Wait for 3 seconds before the next cycle
+                for (int i = 3; i > 0; i--) // Wait for 3 seconds before the next cycle
+                {
+                    Console.Write($"\rWaiting {i} seconds...");
+                    await Task.Delay(1000);
+                }
+                Console.Write("\r                    \n"); // clear the line
             }
         }
 
