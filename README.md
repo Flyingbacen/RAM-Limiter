@@ -1,6 +1,6 @@
 # RAM Limiter
 
-This is a Fork of ![RAM-Limiter](https://github.com/0vm/RAM-Limiter) but a complete rework!
+This is a Fork of a Fork of ![RAM-Limiter](https://github.com/0vm/RAM-Limiter) but a minor detailing rework!
 
 A C# program designed to reduce the memory usage of selected processes by freeing their unused working set memory. This can help improve system performance and optimize resource utilization.
 
@@ -39,11 +39,14 @@ The program reduces the memory usage of processes by using the `EmptyWorkingSet`
 ```plaintext
 Enter the process names separated by commas (e.g., chrome,discord,obs):
 chrome,discord
-Starting memory optimization...
-Process: chrome, Memory: 512 MB
-Memory of process chrome (12345) has been reduced.
-Process: discord, Memory: 1024 MB
-Memory of process discord (67890) has been reduced.
+Process: chrome, Instances: 17, Total Memory: 27 MB
+Process: Discord, Instances: 6, Total Memory: 215 MB
+
+Process: chrome, Instances: 16, Total Memory: 35 MB
+Process: Discord, Instances: 6, Total Memory: 172 MB
+
+Process: chrome, Instances: 16, Total Memory: 14 MB
+Process: Discord, Instances: 6, Total Memory: 147 MB
 Waiting 3 seconds...
 ```
 
